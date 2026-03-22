@@ -1,9 +1,11 @@
 import { FC } from 'react';
 import { AppHeaderUI } from '@ui';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../services/store';
+import { useSelector } from '../../services/store';
+import { userDataSelector } from '../../services/userSlice';
 
 export const AppHeader: FC = () => {
-  const user = useSelector((state: RootState) => state.user.user);
-  return <AppHeaderUI userName={user?.name} />;
+  const user = useSelector(userDataSelector);
+  const userName = user?.name;
+
+  return <AppHeaderUI userName={userName} />;
 };

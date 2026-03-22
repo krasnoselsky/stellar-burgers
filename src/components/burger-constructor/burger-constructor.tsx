@@ -1,48 +1,57 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useEffect } from 'react';
 import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
-import { useSelector, useDispatch } from 'react-redux';
-import { AppDispatch, RootState } from '../../services/store';
+import { useDispatch, useSelector } from '../../services/store';
 import {
-  createOrder,
-  clearConstructorModal
-} from '../../services/constructorSlice';
+  constructorItemsSelector,
+  clearIngredients
+} from '../../services/burgerSlice';
+import {
+  createNewOrder,
+  newOrderSelector,
+  loadingOrderSelector,
+  clearNewOrder
+} from '../../services/userOrdersSlice';
+import { isAuthenticatedSelector } from '../../services/userSlice';
 import { useNavigate } from 'react-router-dom';
 
 export const BurgerConstructor: FC = () => {
-  /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
-  const dispatch = useDispatch<AppDispatch>();
-  const constructorItems = useSelector(
-    (state: RootState) =>
-      state.burgerConstructor?.items ?? { bun: null, ingredients: [] }
-  );
-
-  const orderRequest = useSelector(
-    (state: RootState) => state.burgerConstructor.isLoading
-  );
-
-  const orderModalData = useSelector(
-    (state: RootState) => state.burgerConstructor.orderConstructorData
-  );
-  const user = useSelector((state: RootState) => state.user.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const constructorItems = useSelector(constructorItemsSelector);
+  const orderRequest = useSelector(loadingOrderSelector);
+  const orderModalData = useSelector(newOrderSelector);
+  const isAuthenticated = useSelector(isAuthenticatedSelector);
+
+  // Очистка конструктора после успешного создания заказа
+  useEffect(() => {
+    if (orderModalData) {
+      dispatch(clearIngredients());
+    }
+  }, [orderModalData, dispatch]);
 
   const onOrderClick = () => {
-    if (!user) {
+    if (!constructorItems.bun || orderRequest) return;
+
+    // Проверка авторизации перед созданием заказа
+    if (!isAuthenticated) {
       navigate('/login');
       return;
     }
-    if (!constructorItems.bun || orderRequest) return;
+
     const ingredients = [
       constructorItems.bun._id,
-      ...constructorItems.ingredients.map((elem) => elem._id),
+      ...constructorItems.ingredients.map((item) => item._id),
       constructorItems.bun._id
     ];
-    dispatch(createOrder(ingredients));
+
+    dispatch(createNewOrder(ingredients));
   };
 
   const closeOrderModal = () => {
-    dispatch(clearConstructorModal());
+    dispatch(clearNewOrder());
+    dispatch(clearIngredients());
+    navigate('/');
   };
 
   const price = useMemo(
@@ -54,6 +63,7 @@ export const BurgerConstructor: FC = () => {
       ),
     [constructorItems]
   );
+
   return (
     <BurgerConstructorUI
       price={price}

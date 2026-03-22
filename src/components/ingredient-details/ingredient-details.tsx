@@ -1,28 +1,23 @@
-import { FC, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../services/store';
+import { FC } from 'react';
 import { Preloader } from '../ui/preloader';
 import { IngredientDetailsUI } from '../ui/ingredient-details';
-import { fetchIngredientsById } from '../../services/ingredientsSlice';
 import { useParams } from 'react-router-dom';
+import { useSelector } from '../../services/store';
+import { ingredientsSelector } from '../../services/ingredientsSlice';
 
 export const IngredientDetails: FC = () => {
-  /** TODO: взять переменную из стора */
-  const dispatch = useDispatch<AppDispatch>();
-  const ingredientData = useSelector(
-    (state: RootState) => state.ingredients.selectedIngredient
-  );
-
-  const { id } = useParams<{ id: string }>();
-
-  useEffect(() => {
-    if (!id || ingredientData) return;
-    dispatch(fetchIngredientsById(id));
-  }, [id, dispatch]);
+  const { id } = useParams();
+  const ingredients = useSelector(ingredientsSelector);
+  const ingredientData = ingredients.find((item) => item._id === id);
 
   if (!ingredientData) {
     return <Preloader />;
   }
 
-  return <IngredientDetailsUI ingredientData={ingredientData} />;
+  return (
+    <>
+      <p className='text text_type_main-large pb-10'>Детали ингредиента</p>
+      <IngredientDetailsUI ingredientData={ingredientData} />
+    </>
+  );
 };
