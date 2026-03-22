@@ -1,30 +1,36 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RegisterUI } from '@ui-pages';
-import { useDispatch } from 'react-redux';
-import { registerUser } from '../../services/userSlice';
-import { AppDispatch } from '../../services/store';
+import { useDispatch, useSelector } from '../../services/store';
+import {
+  isAuthenticatedSelector,
+  registerErrorSelector,
+  registerUser
+} from '../../services/userSlice';
+import { Navigate } from 'react-router-dom';
 
 export const Register: FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(isAuthenticatedSelector);
+  const errorMessage = useSelector(registerErrorSelector);
+
+  if (isAuthenticated) {
+    return <Navigate to={'/profile'} replace />;
+  }
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    dispatch(
-      registerUser({
-        name: userName,
-        email,
-        password
-      })
-    );
+    if (!email || !password || !userName) {
+      return;
+    }
+    dispatch(registerUser({ name: userName, email, password }));
   };
 
   return (
     <RegisterUI
-      errorText=''
+      errorText={errorMessage}
       email={email}
       userName={userName}
       password={password}

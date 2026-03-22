@@ -1,63 +1,57 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getFeedsApi } from '@api';
-import { TOrder, TOrdersData } from '@utils-types';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { TOrdersData } from '@utils-types';
 
-type feedsState = {
-  orders: TOrder[];
-  total: number;
-  totalToday: number;
-  isLoading: boolean;
+type TFeedsState = {
+  feeds: TOrdersData;
+  loading: boolean;
   error: string | null;
 };
 
-const initialState: feedsState = {
-  orders: [],
-  total: 0,
-  totalToday: 0,
-  isLoading: false,
+const initialState: TFeedsState = {
+  feeds: {
+    orders: [],
+    total: 0,
+    totalToday: 0
+  },
+  loading: false,
   error: null
 };
 
-export const fetchFeeds = createAsyncThunk<TOrdersData>(
-  'feeds/fetchFeeds',
-  async () => {
-    const data = await getFeedsApi();
-    return {
-      orders: data.orders,
-      total: data.total,
-      totalToday: data.totalToday
-    };
-  }
-);
+export const getFeeds = createAsyncThunk('feeds/getFeeds', getFeedsApi);
 
-const feedsSlice = createSlice({
+export const feedsSlice = createSlice({
   name: 'feeds',
   initialState,
   reducers: {},
+  selectors: {
+    ordersSelector: (state) => state.feeds.orders,
+    totalSelector: (state) => state.feeds.total,
+    totalTodaySelector: (state) => state.feeds.totalToday,
+    loadingSelector: (state) => state.loading,
+    errorSelector: (state) => state.error
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchFeeds.pending, (state) => {
-        state.isLoading = true;
+      .addCase(getFeeds.pending, (state) => {
+        state.loading = true;
         state.error = null;
       })
-      .addCase(fetchFeeds.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const oldOrders = state.orders.map((elem) => elem._id).join(',');
-        const newOrders = action.payload.orders
-          .map((elem) => elem._id)
-          .join(',');
-        if (oldOrders !== newOrders) {
-          state.orders = action.payload.orders;
-          state.total = action.payload.total;
-          state.totalToday = action.payload.totalToday;
-        }
+      .addCase(getFeeds.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? null;
       })
-      .addCase(fetchFeeds.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error =
-          action.error.message || 'Не удалось загрузить список заказов';
+      .addCase(getFeeds.fulfilled, (state, action) => {
+        state.loading = false;
+        state.feeds = action.payload;
       });
   }
 });
 
-export default feedsSlice.reducer;
+export const {
+  ordersSelector,
+  totalSelector,
+  totalTodaySelector,
+  loadingSelector,
+  errorSelector
+} = feedsSlice.selectors;
