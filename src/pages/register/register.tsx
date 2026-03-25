@@ -1,36 +1,49 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RegisterUI } from '@ui-pages';
-import { useDispatch, useSelector } from '../../services/store';
-import {
-  isAuthenticatedSelector,
-  registerErrorSelector,
-  registerUser
-} from '../../services/userSlice';
-import { Navigate } from 'react-router-dom';
+
+import { useDispatch } from '../../services/store';
+import { registerUser } from '../../services/slices/userSlice/userSlice';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+type LocationState = {
+  from?: {
+    pathname: string;
+  };
+};
 
 export const Register: FC = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const state = location.state as LocationState | undefined;
+  const from = state?.from?.pathname || '/';
+
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const dispatch = useDispatch();
-  const isAuthenticated = useSelector(isAuthenticatedSelector);
-  const errorMessage = useSelector(registerErrorSelector);
 
-  if (isAuthenticated) {
-    return <Navigate to={'/profile'} replace />;
-  }
-
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    if (!email || !password || !userName) {
-      return;
+
+    try {
+      await dispatch(
+        registerUser({
+          email,
+          password,
+          name: userName
+        })
+      ).unwrap();
+
+      navigate(from, { replace: true });
+    } catch (err) {
+      console.error('Register failed', err);
     }
-    dispatch(registerUser({ name: userName, email, password }));
   };
 
   return (
     <RegisterUI
-      errorText={errorMessage}
+      errorText=''
       email={email}
       userName={userName}
       password={password}

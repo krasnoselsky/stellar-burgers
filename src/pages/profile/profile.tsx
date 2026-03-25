@@ -1,11 +1,14 @@
 import { ProfileUI } from '@ui-pages';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from '../../services/store';
-import { updateUser, userDataSelector } from '../../services/userSlice';
+import { useSelector, useDispatch } from '../../services/store';
+import {
+  selectUser,
+  updateUser
+} from '../../services/slices/userSlice/userSlice';
 
 export const Profile: FC = () => {
   const dispatch = useDispatch();
-  const user = useSelector(userDataSelector);
+  const user = useSelector(selectUser);
 
   const [formValue, setFormValue] = useState({
     name: user?.name || '',
@@ -14,11 +17,11 @@ export const Profile: FC = () => {
   });
 
   useEffect(() => {
-    setFormValue((prevState) => ({
-      ...prevState,
+    setFormValue({
       name: user?.name || '',
-      email: user?.email || ''
-    }));
+      email: user?.email || '',
+      password: ''
+    });
   }, [user]);
 
   const isFormChanged =
@@ -28,7 +31,17 @@ export const Profile: FC = () => {
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    dispatch(updateUser(formValue));
+    if (!isFormChanged) return;
+
+    const payload: Partial<{ name: string; email: string; password?: string }> =
+      {
+        name: formValue.name,
+        email: formValue.email
+      };
+    if (formValue.password) payload.password = formValue.password;
+
+    dispatch(updateUser(payload));
+    setFormValue((prev) => ({ ...prev, password: '' }));
   };
 
   const handleCancel = (e: SyntheticEvent) => {
