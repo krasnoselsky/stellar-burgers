@@ -17,7 +17,7 @@ import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from '../../services/store';
 import { useEffect } from 'react';
 import { getIngredients } from '../../services/ingredientsSlice';
-import { ProtectedRoute } from '../protectedRoutes/protectedRoutes.tsx';
+import { ProtectedRoute } from '../protectedRoutes/protectedRoute.tsx';
 import { getUser, authChecked } from '../../services/userSlice';
 
 const App = () => {
