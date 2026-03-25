@@ -1,57 +1,51 @@
-import { FC, useMemo, useEffect } from 'react';
-import { TConstructorIngredient } from '@utils-types';
+import { FC, useMemo } from 'react';
 import { BurgerConstructorUI } from '@ui';
-import { useDispatch, useSelector } from '../../services/store';
+import { useSelector, useDispatch } from '../../services/store';
 import {
-  constructorItemsSelector,
-  clearIngredients
-} from '../../services/burgerSlice';
+  constructorSelector,
+  resetConstructor
+} from '../../services/slices/constructorSlice/constructorSlice';
 import {
-  createNewOrder,
-  newOrderSelector,
-  loadingOrderSelector,
-  clearNewOrder
-} from '../../services/userOrdersSlice';
-import { isAuthenticatedSelector } from '../../services/userSlice';
-import { useNavigate } from 'react-router-dom';
+  selectIsOrderLoading,
+  selectCurrentOrder,
+  closeOrderModal as closeOrderAction,
+  createOrder
+} from '../../services/slices/orderSlice/orderSlice';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { selectAccessToken } from '../../services/slices/userSlice/userSlice';
+import { TConstructorIngredient } from '@utils-types';
 
 export const BurgerConstructor: FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const constructorItems = useSelector(constructorItemsSelector);
-  const orderRequest = useSelector(loadingOrderSelector);
-  const orderModalData = useSelector(newOrderSelector);
-  const isAuthenticated = useSelector(isAuthenticatedSelector);
+  const location = useLocation();
 
-  // Очистка конструктора после успешного создания заказа
-  useEffect(() => {
-    if (orderModalData) {
-      dispatch(clearIngredients());
-    }
-  }, [orderModalData, dispatch]);
+  const constructorItems = useSelector(constructorSelector);
+  const orderRequest = useSelector(selectIsOrderLoading);
+  const orderModalData = useSelector(selectCurrentOrder);
+  const accessToken = useSelector(selectAccessToken);
 
   const onOrderClick = () => {
     if (!constructorItems.bun || orderRequest) return;
-
-    // Проверка авторизации перед созданием заказа
-    if (!isAuthenticated) {
-      navigate('/login');
+    if (!accessToken) {
+      navigate('/login', { state: { from: location } });
       return;
     }
 
-    const ingredients = [
+    const itemsForApi = [
       constructorItems.bun._id,
-      ...constructorItems.ingredients.map((item) => item._id),
+      ...constructorItems.ingredients.map((i) => i._id),
       constructorItems.bun._id
     ];
 
-    dispatch(createNewOrder(ingredients));
+    dispatch(createOrder(itemsForApi))
+      .unwrap()
+      .then(() => dispatch(resetConstructor()))
+      .catch((err) => console.error(err));
   };
 
   const closeOrderModal = () => {
-    dispatch(clearNewOrder());
-    dispatch(clearIngredients());
-    navigate('/');
+    dispatch(closeOrderAction());
   };
 
   const price = useMemo(

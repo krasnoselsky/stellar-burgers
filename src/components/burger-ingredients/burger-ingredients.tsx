@@ -1,40 +1,37 @@
-import { useState, useRef, useEffect, FC } from 'react';
+import { useState, useRef, useEffect, FC, useMemo } from 'react';
 import { useInView } from 'react-intersection-observer';
-
-import { TIngredient, TTabMode } from '@utils-types';
-import { BurgerIngredientsUI } from '../ui/burger-ingredients';
 import { useSelector } from '../../services/store';
-import { ingredientsSelector } from '../../services/ingredientsSlice';
+import { TTabMode } from '@utils-types';
+import { BurgerIngredientsUI } from '@ui';
+import { selectAllIngredients } from '../../services/slices/ingredientsSlice/ingredientsSlice';
 
 export const BurgerIngredients: FC = () => {
-  const ingredients = useSelector(ingredientsSelector);
+  const allIngredients = useSelector(selectAllIngredients);
 
-  const buns: Array<TIngredient> = [];
-  const mains: Array<TIngredient> = [];
-  const sauces: Array<TIngredient> = [];
+  const buns = useMemo(
+    () => allIngredients.filter((item) => item.type === 'bun'),
+    [allIngredients]
+  );
 
-  ingredients.forEach((item) => {
-    if (item.type === 'bun') buns.push(item);
-    if (item.type === 'main') mains.push(item);
-    if (item.type === 'sauce') sauces.push(item);
-  });
+  const mains = useMemo(
+    () => allIngredients.filter((item) => item.type === 'main'),
+    [allIngredients]
+  );
+
+  const sauces = useMemo(
+    () => allIngredients.filter((item) => item.type === 'sauce'),
+    [allIngredients]
+  );
 
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
+
   const titleBunRef = useRef<HTMLHeadingElement>(null);
   const titleMainRef = useRef<HTMLHeadingElement>(null);
   const titleSaucesRef = useRef<HTMLHeadingElement>(null);
 
-  const [bunsRef, inViewBuns] = useInView({
-    threshold: 0
-  });
-
-  const [mainsRef, inViewFilling] = useInView({
-    threshold: 0
-  });
-
-  const [saucesRef, inViewSauces] = useInView({
-    threshold: 0
-  });
+  const [bunsRef, inViewBuns] = useInView({ threshold: 0 });
+  const [mainsRef, inViewFilling] = useInView({ threshold: 0 });
+  const [saucesRef, inViewSauces] = useInView({ threshold: 0 });
 
   useEffect(() => {
     if (inViewBuns) {
