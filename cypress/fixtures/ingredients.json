@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "bun1",
+      "name": "Булка тестовая",
+      "type": "bun",
+      "price": 100,
+      "image": "bun.png"
+    },
+    {
+      "_id": "main1",
+      "name": "Котлета тестовая",
+      "type": "main",
+      "price": 200,
+      "image": "main.png"
+    },
+    {
+      "_id": "sauce1",
+      "name": "Соус тестовый",
+      "type": "sauce",
+      "price": 50,
+      "image": "sauce.png"
+    }
+  ]
+}
